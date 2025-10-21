@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# Built files
+main.js
+*.min.js
+
+# Config files that shouldn't be reformatted
+esbuild.config.mjs
+version-bump.mjs
