@@ -114,3 +114,8 @@ tasks:
         aliases: ['linter']
         cmds:
             - eslint src/.
+
+    unused:
+        desc: Find unused functions and classes in the codebase
+        cmds:
+            - npx ts-unused-exports tsconfig.json
