@@ -106,7 +106,7 @@ tasks:
         cmds:
             - git init
             - git add .
-            - git commit -m "Initial commit: Plugin template setup"
+            - git commit -m "Initial commit Plugin template setup"
             - echo "Repository initialized. Run 'task release' when ready for first release."
 
     lint:
