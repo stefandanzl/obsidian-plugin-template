@@ -2,13 +2,12 @@
 
 version: '3'
 vars:
-    ##################### QUICK START #########################
+    # === QUICK START ===
     # 1 Change these 5 placeholder values
     # 2 Copy .env-example to .env and modify for your dev vault
     # 3 Install Taskfile from https://taskfile.dev/installation
-    # 4 Run `task init`
-    #  After modifying code just run the command "task" to build
-    #  and test it in your dev Obsidian vault after reloading it
+    #  After modifying code just run the command "task" to build,
+    #  copy to your testing vault, and reloading Obsidian app to then test
     PLUGIN_ID: plugin-template
     PLUGIN_NAME: Plugin Template
     PLUGIN_DESCRIPTION: A template for creating Obsidian plugins
@@ -29,6 +28,7 @@ tasks:
         cmds:
             - task: build
             - task: copy
+            - task: reload-obsidian
     copy:
         cmds:
             - cp main.js '{{.DIR_PLUGIN}}/main.js'
@@ -38,6 +38,14 @@ tasks:
     build:
         cmds:
             - npm run build
+
+    reload:
+        cmds:
+            - obsidian plugin:reload id={{.PLUGIN_ID}}
+
+    reload-obsidian:
+        cmds:
+            - obsidian command id=app:reload
     patch:
         cmds:
             - npm version patch
