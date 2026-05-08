@@ -3,61 +3,68 @@
 version: "3"
 vars:
   # === QUICK START ===
-  # 1 Change these 5 placeholder values
+  # 1 Change the following 5 placeholder values
   # 2 Copy .env-example to .env and modify for your dev vault
   # 3 Install Taskfile from https://taskfile.dev/installation
-  #  After modifying code just run the command "task" to build,
-  #  copy to your testing vault, and reloading Obsidian app to then test
+  # 4 Run command "task init" from project folder
+  #
+  # To build code and test it in Obsidian just run the command "task"
+  # It will build, copy to your testing vault and reload Obsidian app
+  #
+  # PLACEHOLDER VALUES:
   PLUGIN_ID: plugin-template
   PLUGIN_NAME: Plugin Template
   PLUGIN_DESCRIPTION: A template for creating Obsidian plugins
-  AUTHOR: Stefan Danzl
-  AUTHOR_URL: https://github.com/stefandanzl
+  AUTHOR_NAME: # Stefan Danzl
+  AUTHOR_URL: https://github.com/ # stefandanzl
   ############################################################
   #
   DIR_PLUGIN: "{{.VAULTS_DIR}}/{{.VAULT_NAME}}/.obsidian/plugins/{{.PLUGIN_ID}}"
   VERSION:
     sh: node -e "console.log(require('./package.json').version)"
-  FILES: "main.js manifest.json styles.css"
+  # CURRENT_TAG:
+  #   sh: git describe --tags --abbrev=0
+  TIME:
+    sh: date +%H:%M:%S.%3N
+  FILES: ["main.js", "manifest.json", "styles.css"]
 
-# Rename .env-example to .env and modify for your setup
-dotenv: [".env"]
+dotenv: [".env"] # Copy .env-example to .env and modify according your Obsidian setup
 
 tasks:
+  ####################################### DEVELOPMENT #######################################
   default:
+    desc: This is the main task during development, just run "task" command
     cmds:
       - task: build
       - task: copy
       - task: reload-obsidian
       - task: date
 
+  build:
+    cmds:
+      - npm run build
+
   copy:
     desc: Copies the build files to plugin folder in Obsidian, if folder exists and .env file is set up.
     requires:
       vars: [VAULTS_DIR, VAULT_NAME]
     cmds:
-      - cp main.js '{{.DIR_PLUGIN}}/main.js'
-      - cp styles.css '{{.DIR_PLUGIN}}/styles.css'
-      - cp manifest.json '{{.DIR_PLUGIN}}/manifest.json'
-
-  build:
-    cmds:
-      - npm run build
+      - for: { var: FILES }
+        cmd: cp '{{.ITEM}}' '{{.DIR_PLUGIN}}/{{.ITEM}}'
 
   reload:
     desc: "Reload only your plugin"
+    aliases: [plugin]
     cmds:
       - obsidian plugin:reload id={{.PLUGIN_ID}}
 
   reload-obsidian:
     desc: "Reload entire Obsidian app"
+    aliases: [app]
     cmds:
       - obsidian command id=app:reload
 
-  patch:
-    desc: "Bump patch version"
-    cmds:
-      - npm version patch
+  dev: npm run dev
 
   git:
     desc: Commit all changes
@@ -66,77 +73,9 @@ tasks:
       - git commit -m "task"
       - git push
 
-  date:
-    desc: Print current date
-    silent: true
-    cmds:
-      - echo "Finished at {{now | date "2006-01-02 15:04:05"}}"
-
-  minify: terser main.js -o main.min.js
-
-  time: date +%T
-
-  dev: npm run dev
-
-  bump:
-    desc: "Commit Changes and bump minor version"
-    cmds:
-      - git add .
-      - cmd: git commit -m "bump"
-        ignore_error: true
-      - npm version minor
-      - npm run version
-
-  release:
-    desc: "Commit Changes, create version tag, push to Github and create a new release on GitHub"
-    cmds:
-      - git add .
-      - cmd: git commit -m "{{.VERSION}} Commit"
-        ignore_error: true
-      # - git tag {{.VERSION}}
-      - git push
-      - git push --tags
-      - task: release-create
-
-  release-create:
-    cmds:
-      - gh release create {{.VERSION}} --title "{{.VERSION}}" --notes "New release of the {{.PLUGIN_NAME}} plugin for Obsidian." {{.FILES}}
-
-  replace-name:
-    desc: "Replace placeholders in template files"
-    cmds:
-      - sed -i '' 's/PLUGIN_ID/{{.PLUGIN_ID}}/g' package.json manifest.json src/main.ts README.md
-      - sed -i '' 's/PLUGIN_NAME/{{.PLUGIN_NAME}}/g' package.json manifest.json README.md
-      - sed -i '' 's/PLUGIN_DESCRIPTION/{{.PLUGIN_DESCRIPTION}}/g' package.json manifest.json README.md
-      - sed -i '' 's/AUTHOR_NAME/{{.AUTHOR}}/g' package.json manifest.json README.md
-      - sed -i '' 's/AUTHOR_URL/{{.AUTHOR_URL}}/g' package.json manifest.json
-
-  initialize:
-    desc: "Set up dev environment, make sure to create .env file"
-    requires:
-      vars: [VAULTS_DIR, VAULT_NAME]
-    aliases: ["init"]
-    cmds:
-      - task: replace-name
-      - npm update
-      - mkdir -p {{.DIR_PLUGIN}}
-
-  test:
-    silent: true
-    cmds:
-      - "echo 'Package version: {{.VERSION}}'"
-
-  setup-repo:
-    desc: "Initialize git repository and make first commit"
-    cmds:
-      - git init
-      - git add .
-      - git commit -m "Initial commit Plugin template setup"
-      - echo "Repository initialized. Run 'task release' when ready for first release."
-
   lint:
     desc: Lints all ts and js in src/ folder. May require `npm install -g eslint`
-    aliases: ["linter"]
+    aliases: [linter]
     cmds:
       - eslint src/.
 
@@ -144,3 +83,128 @@ tasks:
     desc: Find unused functions and classes in the codebase
     cmds:
       - npx ts-unused-exports tsconfig.json
+
+  minify: terser main.js -o main.min.js
+
+  ####################################### SETUP #######################################
+
+  initialize:
+    desc: "Set up dev environment, make sure to create .env file"
+    requires:
+      vars: [VAULTS_DIR, VAULT_NAME]
+    aliases: [init]
+    cmds:
+      - task: replace-name
+      - npm update
+      - mkdir -p {{.DIR_PLUGIN}}
+
+  replace-name:
+    desc: "Replace placeholders in template files"
+    requires:
+      vars: [AUTHOR_NAME]
+    cmds:
+      - sed -i '' 's/PLUGIN_ID/{{.PLUGIN_ID}}/g' package.json manifest.json src/main.ts README.md
+      - sed -i '' 's/PLUGIN_NAME/{{.PLUGIN_NAME}}/g' package.json manifest.json README.md
+      - sed -i '' 's/PLUGIN_DESCRIPTION/{{.PLUGIN_DESCRIPTION}}/g' package.json manifest.json README.md
+      - sed -i '' 's/AUTHOR_NAME/{{.AUTHOR_NAME}}/g' package.json manifest.json README.md
+      - sed -i '' 's/AUTHOR_URL/{{.AUTHOR_URL}}/g' package.json manifest.json
+
+  setup-repo:
+    desc: "Initialize git repository and make first commit"
+    cmds:
+      - git init
+      - git add .
+      - git commit -m "Initial commit for {{.PLUGIN_NAME}}"
+      - echo "Repository initialized. Run 'task release' when ready for first release."
+
+  ####################################### RELEASING #######################################
+
+  version-patch:
+    desc: "Bump package patch version (0.0.x)"
+    aliases: [patch]
+    cmds:
+      - npm version patch --no-git-tag-version # No need for clean repository
+      - node version-bump.mjs
+
+  version-minor:
+    desc: "Bump package minor version (0.x.0)"
+    aliases: [minor, bump]
+    cmds:
+      - npm version minor --no-git-tag-version # No need for clean repository
+      - node version-bump.mjs
+
+  git-tag:
+    desc: Tag with package version
+    aliases: [tag]
+    cmds:
+      - git add .
+      - git commit -m "bump to {{.VERSION}}"
+      - git tag {{.VERSION}}
+
+  bump-clean:
+    desc: "Commit Changes and bump package minor version"
+    cmds:
+      - git add .
+      - cmd: git commit -m "pre-bump commit"
+        ignore_error: true
+      # npm version creates git tag and fails if uncommited changes exist
+      - npm version minor
+      - npm run version
+
+  release:
+    desc: "Commit Changes, create version tag, push to Github and create a new release on GitHub"
+    requires:
+      vars: [VERSION, PLUGIN_NAME, FILES]
+    cmds:
+      # Requires you to have bumped version, commited changes and added new tag
+      - git push
+      - git push --tags
+      - task: release-create
+
+  release-create:
+    cmd: gh release create {{.VERSION}} --title "{{.VERSION}}" --notes "New release of the {{.PLUGIN_NAME}} plugin for Obsidian." {{.FILES | join " "}}
+
+  release-force:
+    desc: "Overwrite an existing release and tag on GitHub"
+    cmds:
+      # 1. Delete the release from GitHub
+      - gh release delete {{.VERSION}} --yes
+      # 2. Delete the tag from GitHub (remote)
+      - git push --delete origin {{.VERSION}}
+      # 3. Delete the tag locally (so it can be recreated)
+      - git tag -d {{.VERSION}}
+      # 4. Re-tag at the current commit
+      - git tag {{.VERSION}}
+      # 5. Push the new tag and create the fresh release
+      - git push origin {{.VERSION}} --force
+      - task: release-create
+
+  ####################################### UTILS #######################################
+
+  date:
+    desc: Print current date
+    silent: true
+    cmds: # Date format: 2006-01-02 15:04:05
+      - echo "Finished at {{now | date "2006-01-02 15:04:05"}}"
+
+  time: date +%T
+
+  test:
+    silent: true
+    cmds:
+      - "echo 'Package version: {{.VERSION}}'"
+      - echo {{join " " .FILES}}
+      - for: { var: FILES }
+        cmd: echo "cp '{{.ITEM}}' '{{.DIR_PLUGIN}}/{{.ITEM}}'"
+
+  test2:
+    silent: true
+    cmds:
+      - echo {{.TIME}}
+      - echo {{.TIME}}
+      - echo {{.TIME}}
+      - echo {{.TIME}}
+      - echo {{.TIME}}
+      - echo {{.TIME}}
+      - echo {{.TIME}}
+      - echo {{.TIME}}
