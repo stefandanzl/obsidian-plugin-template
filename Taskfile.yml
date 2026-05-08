@@ -1,6 +1,6 @@
 # https://taskfile.dev
 
-version: '3'
+version: "3"
 vars:
     # === QUICK START ===
     # 1 Change these 5 placeholder values
@@ -15,13 +15,13 @@ vars:
     AUTHOR_URL: https://github.com/stefandanzl
     ############################################################
     #
-    DIR_PLUGIN: '{{.VAULTS_DIR}}/{{.VAULT_NAME}}/.obsidian/plugins/{{.PLUGIN_ID}}'
+    DIR_PLUGIN: "{{.VAULTS_DIR}}/{{.VAULT_NAME}}/.obsidian/plugins/{{.PLUGIN_ID}}"
     VERSION:
         sh: node -e "console.log(require('./package.json').version)"
-    FILES: 'main.js manifest.json styles.css'
+    FILES: "main.js manifest.json styles.css"
 
 # Rename .env-example to .env and modify for your setup
-dotenv: ['.env']
+dotenv: [".env"]
 
 tasks:
     default:
@@ -31,6 +31,8 @@ tasks:
             - task: reload-obsidian
             - task: date
     copy:
+        requires:
+            vars: [VAULTS_DIR, VAULT_NAME]
         cmds:
             - cp main.js '{{.DIR_PLUGIN}}/main.js'
             - cp styles.css '{{.DIR_PLUGIN}}/styles.css'
@@ -72,7 +74,7 @@ tasks:
     dev: npm run dev
 
     bump:
-        desc: 'Commit Changes and bump minor version'
+        desc: "Commit Changes and bump minor version"
         cmds:
             - git add .
             - cmd: git commit -m "bump"
@@ -81,7 +83,7 @@ tasks:
             - npm run version
 
     release:
-        desc: 'Commit Changes, create version tag, push to Github and create a new release on GitHub'
+        desc: "Commit Changes, create version tag, push to Github and create a new release on GitHub"
         cmds:
             - git add .
             - cmd: git commit -m "{{.VERSION}} Commit"
@@ -96,7 +98,7 @@ tasks:
             - gh release create {{.VERSION}} --title "{{.VERSION}}" --notes "New release of the {{.PLUGIN_NAME}} plugin for Obsidian." {{.FILES}}
 
     replace-name:
-        desc: 'Replace placeholders in template files'
+        desc: "Replace placeholders in template files"
         cmds:
             - sed -i '' 's/PLUGIN_ID/{{.PLUGIN_ID}}/g' package.json manifest.json src/main.ts README.md
             - sed -i '' 's/PLUGIN_NAME/{{.PLUGIN_NAME}}/g' package.json manifest.json README.md
@@ -105,8 +107,8 @@ tasks:
             - sed -i '' 's/AUTHOR_URL/{{.AUTHOR_URL}}/g' package.json manifest.json
 
     initialize:
-        desc: 'Install plugin to vault directory'
-        aliases: ['init']
+        desc: "Install plugin to vault directory"
+        aliases: ["init"]
         cmds:
             - task: replace-name
             - npm update
@@ -117,7 +119,7 @@ tasks:
             - echo {{.VERSION}}
 
     setup-repo:
-        desc: 'Initialize git repository and make first commit'
+        desc: "Initialize git repository and make first commit"
         cmds:
             - git init
             - git add .
@@ -126,7 +128,7 @@ tasks:
 
     lint:
         desc: Lints all ts and js in src/ folder. May require `npm install -g eslint`
-        aliases: ['linter']
+        aliases: ["linter"]
         cmds:
             - eslint src/.
 

@@ -1,5 +1,5 @@
 import { Plugin } from "obsidian";
-import { MyPlugin } from "./main";
+import type MyPlugin from "./main";
 
 export function registerCommands(plugin: MyPlugin) {
 	// Add your commands here
@@ -9,6 +9,6 @@ export function registerCommands(plugin: MyPlugin) {
 		callback: () => {
 			// Command implementation
 			console.log("Sample command executed");
-		}
+		},
 	});
 }
