@@ -17,7 +17,7 @@ vars:
   PLUGIN_DESCRIPTION: A template for creating Obsidian plugins
   AUTHOR_NAME: # Stefan Danzl
   AUTHOR_URL: https://github.com/ # stefandanzl
-  ############################################################
+  ##########################################################################################
   #
   DIR_PLUGIN: "{{.VAULTS_DIR}}/{{.VAULT_NAME}}/.obsidian/plugins/{{.PLUGIN_ID}}"
   VERSION:
@@ -37,7 +37,7 @@ tasks:
     cmds:
       - task: build
       - task: copy
-      - task: reload-obsidian
+      - task: reload-app
       - task: date
 
   build:
@@ -52,17 +52,19 @@ tasks:
       - for: { var: FILES }
         cmd: cp '{{.ITEM}}' '{{.DIR_PLUGIN}}/{{.ITEM}}'
 
-  reload:
+  reload-plugin:
     desc: "Reload only your plugin"
     aliases: [plugin]
     cmds:
       - obsidian plugin:reload id={{.PLUGIN_ID}}
 
-  reload-obsidian:
+  reload-app:
     desc: "Reload entire Obsidian app"
-    aliases: [app]
+    aliases: [app, reload-obsidian]
     cmds:
       - obsidian command id=app:reload
+
+  ####################################### TOOLING #######################################
 
   dev: npm run dev
 
@@ -119,64 +121,50 @@ tasks:
 
   ####################################### RELEASING #######################################
 
-  version-patch:
+  release-full:
+    desc: Commit all, bump minor version and add tag, push to remote, create release with assets files.
+    aliases: [deploy, ship, publish]
+    interactive: true
+    cmds:
+      - git add .
+      - task: bump-minor
+      - task: release
+
+  bump-patch:
     desc: "Bump package patch version (0.0.x)"
     aliases: [patch]
     cmds:
-      - npm version patch --no-git-tag-version # No need for clean repository
-      - node version-bump.mjs
+      - npm version patch -f
 
-  version-minor:
+  bump-minor:
     desc: "Bump package minor version (0.x.0)"
     aliases: [minor, bump]
     cmds:
-      - npm version minor --no-git-tag-version # No need for clean repository
-      - node version-bump.mjs
-
-  git-tag:
-    desc: Tag with package version
-    aliases: [tag]
-    cmds:
-      - git add .
-      - git commit -m "bump to {{.VERSION}}"
-      - git tag {{.VERSION}}
-
-  bump-clean:
-    desc: "Commit Changes and bump package minor version"
-    cmds:
-      - git add .
-      - cmd: git commit -m "pre-bump commit"
-        ignore_error: true
-      # npm version creates git tag and fails if uncommited changes exist
-      - npm version minor
-      - npm run version
+      - npm version minor -f
 
   release:
-    desc: "Commit Changes, create version tag, push to Github and create a new release on GitHub"
+    desc: "Push version bump commit and tag to repository and create a new release on GitHub"
     requires:
       vars: [VERSION, PLUGIN_NAME, FILES]
-    cmds:
-      # Requires you to have bumped version, commited changes and added new tag
+    cmds: # Requires you to have bumped version, commited changes and added new tag
       - git push
       - git push --tags
       - task: release-create
 
   release-create:
+    vars:
+      VERSION:
+        sh: node -e "console.log(require('./package.json').version)"
     cmd: gh release create {{.VERSION}} --title "{{.VERSION}}" --notes "New release of the {{.PLUGIN_NAME}} plugin for Obsidian." {{.FILES | join " "}}
 
   release-force:
     desc: "Overwrite an existing release and tag on GitHub"
     cmds:
-      # 1. Delete the release from GitHub
-      - gh release delete {{.VERSION}} --yes
-      # 2. Delete the tag from GitHub (remote)
-      - git push --delete origin {{.VERSION}}
-      # 3. Delete the tag locally (so it can be recreated)
-      - git tag -d {{.VERSION}}
-      # 4. Re-tag at the current commit
-      - git tag {{.VERSION}}
-      # 5. Push the new tag and create the fresh release
-      - git push origin {{.VERSION}} --force
+      - gh release delete {{.VERSION}} --yes # 1. Delete the release from GitHub
+      - git push --delete origin {{.VERSION}} # 2. Delete the tag from GitHub (remote)
+      - git tag -d {{.VERSION}} # 3. Delete the tag locally (so it can be recreated)
+      - git tag {{.VERSION}} # 4. Re-tag at the current commit
+      - git push origin {{.VERSION}} --force # 5. Push the new tag and create the fresh release
       - task: release-create
 
   ####################################### UTILS #######################################
@@ -192,19 +180,9 @@ tasks:
   test:
     silent: true
     cmds:
+      - "echo Time {{.TIME}}"
       - "echo 'Package version: {{.VERSION}}'"
       - echo {{join " " .FILES}}
       - for: { var: FILES }
         cmd: echo "cp '{{.ITEM}}' '{{.DIR_PLUGIN}}/{{.ITEM}}'"
-
-  test2:
-    silent: true
-    cmds:
-      - echo {{.TIME}}
-      - echo {{.TIME}}
-      - echo {{.TIME}}
-      - echo {{.TIME}}
-      - echo {{.TIME}}
-      - echo {{.TIME}}
-      - echo {{.TIME}}
-      - echo {{.TIME}}
+      - "echo Time {{.TIME}}"
