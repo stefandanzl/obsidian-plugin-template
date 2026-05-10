@@ -1,12 +1,13 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
 # https://taskfile.dev
 
 version: "3"
 vars:
   # === QUICK START ===
   # 1 Change the following 5 placeholder values
-  # 2 Copy .env-example to .env and modify for your dev vault
-  # 3 Install Taskfile from https://taskfile.dev/installation
-  # 4 Run command "task init" from project folder
+  # 2 Install Taskfile from https://taskfile.dev/installation
+  # 3 Run command "task init" from project folder
+  # 4 Create .env file with 'cp .env-example .env' and modify for your dev vault
   #
   # To build code and test it in Obsidian just run the command "task"
   # It will build, copy to your testing vault and reload Obsidian app
@@ -16,7 +17,7 @@ vars:
   PLUGIN_NAME: Plugin Template
   PLUGIN_DESCRIPTION: A template for creating Obsidian plugins
   AUTHOR_NAME: # Stefan Danzl
-  AUTHOR_URL: https://github.com/ # stefandanzl
+  AUTHOR_URL: # https://github.com/stefandanzl
   ##########################################################################################
   #
   DIR_PLUGIN: "{{.VAULTS_DIR}}/{{.VAULT_NAME}}/.obsidian/plugins/{{.PLUGIN_ID}}"
@@ -26,7 +27,10 @@ vars:
   #   sh: git describe --tags --abbrev=0
   TIME:
     sh: date +%H:%M:%S.%3N
-  FILES: ["main.js", "manifest.json", "styles.css"]
+  FILES:
+    - "main.js"
+    - "manifest.json"
+    - "styles.css"
 
 dotenv: [".env"] # Copy .env-example to .env and modify according your Obsidian setup
 
@@ -49,6 +53,7 @@ tasks:
     requires:
       vars: [VAULTS_DIR, VAULT_NAME]
     cmds:
+      - mkdir -p {{.DIR_PLUGIN}}
       - for: { var: FILES }
         cmd: cp '{{.ITEM}}' '{{.DIR_PLUGIN}}/{{.ITEM}}'
 
@@ -92,24 +97,28 @@ tasks:
 
   initialize:
     desc: "Set up dev environment, make sure to create .env file"
-    requires:
-      vars: [VAULTS_DIR, VAULT_NAME]
-    aliases: [init]
+    aliases: [init, initialize]
     cmds:
+      - npm install
       - task: replace-name
-      - npm update
-      - mkdir -p {{.DIR_PLUGIN}}
+      # - cp .env-example .env
+      - echo AN{{.AUTHOR_NAME}}
+      - printf '\033[35m%s\033[0m\n' "Create .env with 'cp .env-example .env' and enter VAULTS_DIR and VAULT_NAME now"
 
   replace-name:
     desc: "Replace placeholders in template files"
+    preconditions:
+      - sh: test -n "{{.AUTHOR_NAME}}"
+        msg: Enter your name next to AUTHOR_NAME and other VARIABLES at the top of Taskfile.yml
     requires:
-      vars: [AUTHOR_NAME]
+      vars:
+        [AUTHOR_NAME, PLUGIN_ID, PLUGIN_NAME, PLUGIN_DESCRIPTION, AUTHOR_URL]
     cmds:
-      - sed -i '' 's/PLUGIN_ID/{{.PLUGIN_ID}}/g' package.json manifest.json src/main.ts README.md
-      - sed -i '' 's/PLUGIN_NAME/{{.PLUGIN_NAME}}/g' package.json manifest.json README.md
-      - sed -i '' 's/PLUGIN_DESCRIPTION/{{.PLUGIN_DESCRIPTION}}/g' package.json manifest.json README.md
-      - sed -i '' 's/AUTHOR_NAME/{{.AUTHOR_NAME}}/g' package.json manifest.json README.md
-      - sed -i '' 's/AUTHOR_URL/{{.AUTHOR_URL}}/g' package.json manifest.json
+      - perl -i -pe 's|PLUGIN_ID|{{.PLUGIN_ID}}|g' package.json manifest.json
+      - perl -i -pe 's|PLUGIN_NAME|{{.PLUGIN_NAME}}|g' package.json manifest.json
+      - perl -i -pe 's|PLUGIN_DESCRIPTION|{{.PLUGIN_DESCRIPTION}}|g' package.json manifest.json
+      - perl -i -pe 's|AUTHOR_NAME|{{.AUTHOR_NAME}}|g' package.json manifest.json
+      - perl -i -pe 's|AUTHOR_URL|{{.AUTHOR_URL}}|g' package.json manifest.json
 
   setup-repo:
     desc: "Initialize git repository and make first commit"
