@@ -13,6 +13,7 @@
 		"strictNullChecks": true,
 		"strictPropertyInitialization": false,
 		"allowSyntheticDefaultImports": true,
+		"useUnknownInCatchVariables": false,
 		"lib": ["DOM", "ES2022"],
 		"paths": { "*": ["./*"] }
 	},
