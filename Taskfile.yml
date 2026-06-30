@@ -25,10 +25,9 @@ vars:
     sh: node -e "console.log(require('./package.json').version)"
   # CURRENT_TAG:
   #   sh: git describe --tags --abbrev=0
-  TIME:
+  START_TIME:
     sh: date +%H:%M:%S.%3N
-  BUNDLE_SIZE:
-    sh: node -e "console.log(require('./meta.json').outputs['main.js'].bytes)"
+
   FILES:
     - "main.js"
     - "manifest.json"
@@ -77,6 +76,9 @@ tasks:
     aliases: [bundle, size]
     silent: true
     ignore_error: true
+    vars:
+      BUNDLE_SIZE:
+        sh: node -e "console.log(require('./meta.json').outputs['main.js'].bytes)"
     cmd: echo '{{.BUNDLE_SIZE}} bytes'
 
   dev: npm run dev
