@@ -10,6 +10,7 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = process.argv[2] === "production";
+const meta = process.argv[2] === "metafile";
 
 const context = await esbuild.context({
 	banner: {
@@ -43,9 +44,19 @@ const context = await esbuild.context({
 	metafile: true,
 });
 
-if (prod) {
+if (prod || meta) {
 	const result = await context.rebuild();
-	fs.writeFileSync("meta.json", JSON.stringify(result.metafile));
+
+	// Metafile speichern zur Analyse
+	if (result.metafile) {
+		await fs.writeFileSync("meta.json", JSON.stringify(result.metafile, null, 2));
+		if (meta) {
+			// Optional: Visualisierbare Ausgabe im Terminal (Size breakdown)
+			console.log(await esbuild.analyzeMetafile(result.metafile));
+		}
+	}
+
+	await context.dispose(); // Kontext sauber beenden
 	process.exit(0);
 } else {
 	await context.watch();

@@ -50,6 +50,10 @@ tasks:
     cmds:
       - npm run build
 
+  meta:
+    cmds:
+      - npm run meta
+
   copy:
     desc: Copies the build files to plugin folder in Obsidian, if folder exists and .env file is set up.
     requires:
