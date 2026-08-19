@@ -2,10 +2,10 @@
 
 ### Key advantages over standard templates
 
--   **Minimal configuration**: Everything works out of the box with sensible defaults
--   **Environment-based**: Easily switch between development and production vaults
--   **Integrated release management**: From development to GitHub release in one command
--   **Production-ready**: Includes best practices for plugin development, settings, and commands
+- **Minimal configuration**: Everything works out of the box with sensible defaults
+- **Environment-based**: Easily switch between development and production vaults
+- **Integrated release management**: From development to GitHub release in one command
+- **Production-ready**: Includes best practices for plugin development, settings, and commands
 
 ## 1. Initial Setup:
 
@@ -27,23 +27,30 @@ VAULTS_DIR=/path/to/your/vaults
 VAULT_NAME=your-vault-name
 ```
 
-#### 4. Add your data to `Taskfile.yml`
+#### 4. Add your data to `manifest.json`, `package.json` and `LICENSE`
 
-```yaml
-PLUGIN_ID: awesome-plugin
-PLUGIN_NAME: Awesome Plugin
-PLUGIN_DESCRIPTION: This is very awesome Plugin
-AUTHOR: Thomas Jefferson
-AUTHOR_URL: https://github.com/tjeff
+`manifest.json`
+
+```json
+{
+	"id": "awesome-plugin",
+	"name": "Awesome Plugin",
+	"version": "0.1.0",
+	"minAppVersion": "1.12.0",
+	"description": "This is very awesome Plugin",
+	"author": "Carl Johnson",
+	"authorUrl": "https://github.com/cj_gsfl",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}
 ```
 
 #### 5. Run initialization sequence
 
 The `task init` command automatically:
 
--   Replaces all placeholder values (`PLUGIN_ID`, `PLUGIN_NAME`, etc.) across all files
--   Installs and updates dependencies with `npm update`
--   Creates the plugin directory in your dev vault
+- Installs and updates dependencies with `npm update`
+- Creates the plugin directory in your dev vault
 
 #### 6. Set up git
 
@@ -81,7 +88,7 @@ task release
 > You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
 > The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
 
-If you want to start out from version `0.0.0` instead of `1.0.0`, manually change `versions.json`, `package.json` and `manifest.json`
+If you want to start out from version `1.0.0` instead of `0.1.0`, manually change `versions.json`, `package.json` and `manifest.json`
 
 # General Plugin Development guidelines
 
@@ -89,77 +96,77 @@ If you want to start out from version `0.0.0` instead of `1.0.0`, manually chang
 
 Follow Obsidian's **Developer Policies** and **Plugin Guidelines**. In particular:
 
--   Default to local/offline operation. Only make network requests when essential to the feature.
--   No hidden telemetry. If you collect optional analytics or call third-party services, require explicit opt-in and document clearly in `README.md` and in settings.
--   Never execute remote code, fetch and eval scripts, or auto-update plugin code outside of normal releases.
--   Minimize scope: read/write only what's necessary inside the vault. Do not access files outside the vault.
--   Clearly disclose any external services used, data sent, and risks.
--   Respect user privacy. Do not collect vault contents, filenames, or personal information unless absolutely necessary and explicitly consented.
--   Avoid deceptive patterns, ads, or spammy notifications.
--   Register and clean up all DOM, app, and interval listeners using the provided `register*` helpers so the plugin unloads safely.
+- Default to local/offline operation. Only make network requests when essential to the feature.
+- No hidden telemetry. If you collect optional analytics or call third-party services, require explicit opt-in and document clearly in `README.md` and in settings.
+- Never execute remote code, fetch and eval scripts, or auto-update plugin code outside of normal releases.
+- Minimize scope: read/write only what's necessary inside the vault. Do not access files outside the vault.
+- Clearly disclose any external services used, data sent, and risks.
+- Respect user privacy. Do not collect vault contents, filenames, or personal information unless absolutely necessary and explicitly consented.
+- Avoid deceptive patterns, ads, or spammy notifications.
+- Register and clean up all DOM, app, and interval listeners using the provided `register*` helpers so the plugin unloads safely.
 
 ## UX & copy guidelines (for UI text, commands, settings)
 
--   Prefer sentence case for headings, buttons, and titles.
--   Use clear, action-oriented imperatives in step-by-step copy.
--   Use **bold** to indicate literal UI labels. Prefer "select" for interactions.
--   Use arrow notation for navigation: **Settings → Community plugins**.
--   Keep in-app strings short, consistent, and free of jargon.
+- Prefer sentence case for headings, buttons, and titles.
+- Use clear, action-oriented imperatives in step-by-step copy.
+- Use **bold** to indicate literal UI labels. Prefer "select" for interactions.
+- Use arrow notation for navigation: **Settings → Community plugins**.
+- Keep in-app strings short, consistent, and free of jargon.
 
 ## Performance
 
--   Keep startup light. Defer heavy work until needed.
--   Avoid long-running tasks during `onload`; use lazy initialization.
--   Batch disk access and avoid excessive vault scans.
--   Debounce/throttle expensive operations in response to file system events.
+- Keep startup light. Defer heavy work until needed.
+- Avoid long-running tasks during `onload`; use lazy initialization.
+- Batch disk access and avoid excessive vault scans.
+- Debounce/throttle expensive operations in response to file system events.
 
 ## Coding conventions
 
--   TypeScript with `"strict": true` preferred.
--   **Keep `main.ts` minimal**: Focus only on plugin lifecycle (onload, onunload, addCommand calls). Delegate all feature logic to separate modules.
--   **Split large files**: If any file exceeds ~200-300 lines, consider breaking it into smaller, focused modules.
--   **Use clear module boundaries**: Each file should have a single, well-defined responsibility.
--   Bundle everything into `main.js` (no unbundled runtime deps).
--   Avoid Node/Electron APIs if you want mobile compatibility; set `isDesktopOnly` accordingly.
--   Prefer `async/await` over promise chains; handle errors gracefully.
+- TypeScript with `"strict": true` preferred.
+- **Keep `main.ts` minimal**: Focus only on plugin lifecycle (onload, onunload, addCommand calls). Delegate all feature logic to separate modules.
+- **Split large files**: If any file exceeds ~200-300 lines, consider breaking it into smaller, focused modules.
+- **Use clear module boundaries**: Each file should have a single, well-defined responsibility.
+- Bundle everything into `main.js` (no unbundled runtime deps).
+- Avoid Node/Electron APIs if you want mobile compatibility; set `isDesktopOnly` accordingly.
+- Prefer `async/await` over promise chains; handle errors gracefully.
 
 ## Mobile
 
--   Where feasible, test on iOS and Android.
--   Don't assume desktop-only behavior unless `isDesktopOnly` is `true`.
--   Avoid large in-memory structures; be mindful of memory and storage constraints.
+- Where feasible, test on iOS and Android.
+- Don't assume desktop-only behavior unless `isDesktopOnly` is `true`.
+- Avoid large in-memory structures; be mindful of memory and storage constraints.
 
 ## Agent do/don't
 
 **Do**
 
--   Add commands with stable IDs (don't rename once released).
--   Provide defaults and validation in settings.
--   Write idempotent code paths so reload/unload doesn't leak listeners or intervals.
--   Use `this.register*` helpers for everything that needs cleanup.
+- Add commands with stable IDs (don't rename once released).
+- Provide defaults and validation in settings.
+- Write idempotent code paths so reload/unload doesn't leak listeners or intervals.
+- Use `this.register*` helpers for everything that needs cleanup.
 
 **Don't**
 
--   Introduce network calls without an obvious user-facing reason and documentation.
--   Ship features that require cloud services without clear disclosure and explicit opt-in.
--   Store or transmit vault contents unless essential and consented.
+- Introduce network calls without an obvious user-facing reason and documentation.
+- Ship features that require cloud services without clear disclosure and explicit opt-in.
+- Store or transmit vault contents unless essential and consented.
 
 ## References
 
--   Obsidian sample plugin: https://github.com/obsidianmd/obsidian-sample-plugin
--   API documentation: https://docs.obsidian.md
--   API code: https://github.com/obsidianmd/obsidian-api
--   Developer policies: https://docs.obsidian.md/Developer+policies
--   Plugin guidelines: https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines
--   Style guide: https://help.obsidian.md/style-guide
+- Obsidian sample plugin: https://github.com/obsidianmd/obsidian-sample-plugin
+- API documentation: https://docs.obsidian.md
+- API code: https://github.com/obsidianmd/obsidian-api
+- Developer policies: https://docs.obsidian.md/Developer+policies
+- Plugin guidelines: https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines
+- Style guide: https://help.obsidian.md/style-guide
 
 ## Improve code quality with eslint (optional)
 
--   [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code.
--   To use eslint with this project, make sure to install eslint from terminal:
-    -   `npm install -g eslint`
--   To use eslint to analyze this project use this command:
-    -   `eslint main.ts`
-    -   eslint will then create a report with suggestions for code improvement by file and line number.
--   If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-    -   `eslint ./src/`
+- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code.
+- To use eslint with this project, make sure to install eslint from terminal:
+    - `npm install -g eslint`
+- To use eslint to analyze this project use this command:
+    - `eslint main.ts`
+    - eslint will then create a report with suggestions for code improvement by file and line number.
+- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
+    - `eslint ./src/`
